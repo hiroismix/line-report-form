@@ -4,10 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>実績報告テスト</title>
+  <title>LIFF環境確認</title>
 </head>
 <body>
-  <h1>GitHub Pages テスト成功！</h1>
-  <p>LINE実績報告システムの準備中です。</p>
+
+  <h2>LIFF環境確認テスト</h2>
+
+  <p id="status">JavaScript準備中...</p>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <script>
+    if (typeof liff === 'undefined') {
+      document.getElementById('status').textContent =
+        'SDK読み込み失敗';
+    } else {
+      document.getElementById('status').textContent =
+        'SDK読み込み成功！';
+    }
+  </script>
+
 </body>
 </html>
