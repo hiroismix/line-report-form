@@ -4,24 +4,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LIFF環境確認</title>
+  <title>LIFF初期化テスト</title>
 </head>
 <body>
 
-  <h2>LIFF環境確認テスト</h2>
-
-  <p id="status">JavaScript準備中...</p>
+  <h2>LIFF初期化テスト</h2>
+  <p id="status">JavaScript起動成功</p>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <script>
-    if (typeof liff === 'undefined') {
-      document.getElementById('status').textContent =
-        'SDK読み込み失敗';
-    } else {
-      document.getElementById('status').textContent =
-        'SDK読み込み成功！';
+    async function startLIFF() {
+      const status = document.getElementById('status');
+
+      try {
+        status.textContent = 'LIFF初期化開始';
+
+        await liff.init({
+          liffId: '2012604478-1oFE6ZIs'
+        });
+
+        status.textContent = 'LIFF初期化成功！';
+
+      } catch (error) {
+        status.textContent =
+          'エラー：' + error.message;
+      }
     }
+
+    startLIFF();
   </script>
 
 </body>
