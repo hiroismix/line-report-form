@@ -4,46 +4,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LINE認証テスト</title>
+  <title>GAS通信テスト</title>
 </head>
 <body>
 
-  <h2>LINE認証テスト</h2>
-  <p id="status">初期化中...</p>
-  <p id="client"></p>
-  <p id="login"></p>
-  <p id="token"></p>
+  <h2>GAS通信テスト</h2>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <button onclick="sendData()">GASに送信する</button>
+
+  <p id="status">待機中...</p>
 
   <script>
-    async function startLIFF() {
+    const GAS_URL = 'ここにGASのウェブアプリURL';
+
+    async function sendData() {
       const status = document.getElementById('status');
 
+      status.textContent = '送信中...';
+
       try {
-        await liff.init({
-          liffId: '2012604478-1oFE6ZIs'
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: 'GitHub Pagesからの通信テスト'
+          })
         });
 
-        status.textContent = 'LIFF初期化成功！';
+        const result = await response.json();
 
-        document.getElementById('client').textContent =
-          'LINEアプリ内：' + liff.isInClient();
-
-        document.getElementById('login').textContent =
-          'ログイン状態：' + liff.isLoggedIn();
-
-        const idToken = liff.getIDToken();
-
-        document.getElementById('token').textContent =
-          'IDトークン取得：' + (idToken ? '成功' : '取得できません');
+        status.textContent =
+          '返信成功！ ' + result.message;
 
       } catch (error) {
-        status.textContent = 'エラー：' + error.message;
+        status.textContent =
+          '通信エラー：' + error.message;
       }
     }
-
-    startLIFF();
   </script>
 
 </body>
