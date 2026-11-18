@@ -4,12 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LIFF初期化テスト</title>
+  <title>LINE認証テスト</title>
 </head>
 <body>
 
-  <h2>LIFF初期化テスト</h2>
-  <p id="status">JavaScript起動成功</p>
+  <h2>LINE認証テスト</h2>
+  <p id="status">初期化中...</p>
+  <p id="client"></p>
+  <p id="login"></p>
+  <p id="token"></p>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -18,17 +21,25 @@
       const status = document.getElementById('status');
 
       try {
-        status.textContent = 'LIFF初期化開始';
-
         await liff.init({
           liffId: '2012604478-1oFE6ZIs'
         });
 
         status.textContent = 'LIFF初期化成功！';
 
+        document.getElementById('client').textContent =
+          'LINEアプリ内：' + liff.isInClient();
+
+        document.getElementById('login').textContent =
+          'ログイン状態：' + liff.isLoggedIn();
+
+        const idToken = liff.getIDToken();
+
+        document.getElementById('token').textContent =
+          'IDトークン取得：' + (idToken ? '成功' : '取得できません');
+
       } catch (error) {
-        status.textContent =
-          'エラー：' + error.message;
+        status.textContent = 'エラー：' + error.message;
       }
     }
 
