@@ -4,42 +4,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GAS通信テスト</title>
+  <title>LINE認証連携テスト</title>
 </head>
 <body>
 
-  <h2>GAS通信テスト</h2>
+  <h2>LINE認証連携テスト</h2>
+  <p id="status">準備中...</p>
 
-  <button onclick="sendData()">GASに送信する</button>
+  <button id="sendButton" onclick="sendToken()" disabled>
+    LINE認証を実行
+  </button>
 
-  <p id="status">待機中...</p>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby9dsOYtDRrIoDzU9FZ0vxntbzmkzkYTT8hNebEki0LYRzzMaezH7A6RMiIRfn5sqOpNQ/exec';
+    const LIFF_ID = '2012604478-1oFE6ZIs';
+    const GAS_URL = 'ここにGASのウェブアプリURL';
 
-    async function sendData() {
+    async function startLIFF() {
       const status = document.getElementById('status');
 
-      status.textContent = '送信中...';
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        status.textContent = 'LIFF初期化成功！';
+
+        if (!liff.isLoggedIn()) {
+          status.textContent = 'LINEにログインしていません';
+          return;
+        }
+
+        document.getElementById('sendButton').disabled = false;
+
+      } catch (error) {
+        status.textContent = 'LIFFエラー：' + error.message;
+      }
+    }
+
+    async function sendToken() {
+      const status = document.getElementById('status');
 
       try {
+        status.textContent = 'GASに送信中...';
+
+        const idToken = liff.getIDToken();
+
+        if (!idToken) {
+          status.textContent = 'IDトークンを取得できません';
+          return;
+        }
+
         const response = await fetch(GAS_URL, {
           method: 'POST',
           body: JSON.stringify({
-            message: 'GitHub Pagesからの通信テスト'
+            idToken: idToken
           })
         });
 
         const result = await response.json();
 
-        status.textContent =
-          '返信成功！ ' + result.message;
+        if (result.status === 'success') {
+          status.textContent =
+            result.message + ' / ユーザーID取得成功！';
+        } else {
+          status.textContent = '認証失敗：' + result.message;
+        }
 
       } catch (error) {
-        status.textContent =
-          '通信エラー：' + error.message;
+        status.textContent = '通信エラー：' + error.message;
       }
     }
+
+    startLIFF();
   </script>
 
 </body>
