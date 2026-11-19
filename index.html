@@ -141,7 +141,11 @@
         status.textContent = 'LINE認証情報を取得できません。';
         return;
       }
-
+      const profile = await 
+      liff.getProfile();
+      window.staffName = 
+      profile.displayName;
+      
       status.textContent = 'LINE認証済みです。実績を入力してください。';
       document.getElementById('sendButton').disabled = false;
 
@@ -184,9 +188,10 @@
       const response = await fetch(GAS_URL, {
         method: 'POST',
         body: JSON.stringify({
-          idToken: idToken,
-          report: report
-        })
+        idToken: idToken,
+        staffName: window.staffName,
+        report: report
+      })
       });
 
       const result = await response.json();
