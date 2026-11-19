@@ -4,79 +4,212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LINE認証連携テスト</title>
+  <title>店舗実績報告</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f6f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 16px 0;
+    }
+
+    .field label {
+      font-weight: bold;
+      width: 100px;
+    }
+
+    .field input {
+      width: 100px;
+      padding: 10px;
+      font-size: 18px;
+      text-align: right;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #06c755;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    button:disabled {
+      background: #aaa;
+    }
+
+    #status {
+      text-align: center;
+      margin-top: 16px;
+      overflow-wrap: anywhere;
+    }
+  </style>
 </head>
+
 <body>
 
-  <h2>LINE認証連携テスト</h2>
-  <p id="status">準備中...</p>
+<div class="container">
+  <h2>店舗実績報告</h2>
+  <p>本日の実績を入力してください。</p>
 
-  <button id="sendButton" onclick="sendToken()" disabled>
-    LINE認証を実行
+  <div id="form"></div>
+
+  <button id="sendButton" onclick="sendReport()" disabled>
+    実績を送信する
   </button>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <p id="status">LINE認証を確認しています...</p>
+</div>
 
-  <script>
-    const LIFF_ID = '2012604478-1oFE6ZIs';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby9dsOYtDRrIoDzU9FZ0vxntbzmkzkYTT8hNebEki0LYRzzMaezH7A6RMiIRfn5sqOpNQ/exec';
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    async function startLIFF() {
-      const status = document.getElementById('status');
+<script>
+  const LIFF_ID = '2012604478-1oFE6ZIs';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby9dsOYtDRrIoDzU9FZ0vxntbzmkzkYTT8hNebEki0LYRzzMaezH7A6RMiIRfn5sqOpNQ/exec';
 
-      try {
-        await liff.init({ liffId: LIFF_ID });
+  const fields = [
+    '機変',
+    '新規',
+    'MNP',
+    '光',
+    '電気',
+    'クレカ',
+    'タブレット'
+  ];
 
-        status.textContent = 'LIFF初期化成功！';
+  // 入力欄を作成
+  const form = document.getElementById('form');
 
-        if (!liff.isLoggedIn()) {
-          status.textContent = 'LINEにログインしていません';
-          return;
-        }
+  fields.forEach(field => {
+    const div = document.createElement('div');
+    div.className = 'field';
 
-        document.getElementById('sendButton').disabled = false;
+    const label = document.createElement('label');
+    label.textContent = field;
 
-      } catch (error) {
-        status.textContent = 'LIFFエラー：' + error.message;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '999';
+    input.step = '1';
+    input.id = field;
+    input.placeholder = '0';
+
+    div.appendChild(label);
+    div.appendChild(input);
+    form.appendChild(div);
+  });
+
+  // LINE認証
+  async function startLIFF() {
+    const status = document.getElementById('status');
+
+    try {
+      await liff.init({ liffId: LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        status.textContent = 'LINEにログインしてください。';
+        return;
       }
+
+      if (!liff.getIDToken()) {
+        status.textContent = 'LINE認証情報を取得できません。';
+        return;
+      }
+
+      status.textContent = 'LINE認証済みです。実績を入力してください。';
+      document.getElementById('sendButton').disabled = false;
+
+    } catch (error) {
+      status.textContent = '認証エラー：' + error.message;
+    }
+  }
+
+  // 実績送信
+  async function sendReport() {
+    const status = document.getElementById('status');
+    const button = document.getElementById('sendButton');
+
+    const report = {};
+
+    for (const field of fields) {
+      const raw = document.getElementById(field).value;
+
+      if (raw !== '' &&
+          (!/^\d+$/.test(raw) ||
+           Number(raw) < 0 ||
+           Number(raw) > 999)) {
+        status.textContent = field + 'は0〜999の整数で入力してください。';
+        return;
+      }
+
+      report[field] = raw === '' ? 0 : Number(raw);
     }
 
-    async function sendToken() {
-      const status = document.getElementById('status');
+    if (!confirm('この内容で実績を登録しますか？')) {
+      return;
+    }
 
-      try {
-        status.textContent = 'GASに送信中...';
+    try {
+      button.disabled = true;
+      status.textContent = '登録中です...';
 
-        const idToken = liff.getIDToken();
+      const idToken = liff.getIDToken();
 
-        if (!idToken) {
-          status.textContent = 'IDトークンを取得できません';
-          return;
-        }
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          idToken: idToken,
+          report: report
+        })
+      });
 
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            idToken: idToken
-          })
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        status.textContent = result.message;
+        fields.forEach(field => {
+          document.getElementById(field).value = '';
         });
-
-        const result = await response.json();
-
-        if (result.status === 'success') {
-          status.textContent =
-            result.message + ' / ユーザーID取得成功！';
-        } else {
-          status.textContent = '認証失敗：' + result.message;
-        }
-
-      } catch (error) {
-        status.textContent = '通信エラー：' + error.message;
+      } else {
+        status.textContent = '登録失敗：' + result.message;
       }
-    }
 
-    startLIFF();
-  </script>
+    } catch (error) {
+      status.textContent = '通信エラー：' + error.message;
+
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  startLIFF();
+</script>
 
 </body>
 </html>
