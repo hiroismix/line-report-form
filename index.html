@@ -132,33 +132,44 @@
   });
 
   // LINE認証
-  async function startLIFF() {
-    const status = document.getElementById('status');
+  
+async function startLIFF() {
+  const status = document.getElementById('status');
 
-    try {
-      await liff.init({ liffId: LIFF_ID });
+  try {
+    await liff.init({ liffId: LIFF_ID });
 
-      if (!liff.isLoggedIn()) {
-        status.textContent = 'LINEにログインしてください。';
-        return;
-      }
+    // LINE未ログインならLINEログインへ移動
+    if (!liff.isLoggedIn()) {
+      status.textContent = 'LINEログインへ移動します...';
 
-      if (!liff.getIDToken()) {
-        status.textContent = 'LINE認証情報を取得できません。';
-        return;
-      }
-      const profile = await 
-      liff.getProfile();
-      window.staffName = 
-      profile.displayName;
-      
-      status.textContent = 'LINE認証済みです。実績を入力してください。';
-      document.getElementById('sendButton').disabled = false;
+      liff.login({
+        redirectUri: window.location.href
+      });
 
-    } catch (error) {
-      status.textContent = '認証エラー：' + error.message;
+      return;
     }
+
+    // IDトークン確認
+    if (!liff.getIDToken()) {
+      status.textContent = 'LINE認証情報を取得できません。';
+      return;
+    }
+
+    // スタッフ名取得
+    const profile = await liff.getProfile();
+    window.staffName = profile.displayName;
+
+    status.textContent =
+      'LINE認証済みです。実績を入力してください。';
+
+    document.getElementById('sendButton').disabled = false;
+
+  } catch (error) {
+    status.textContent = '認証エラー：' + error.message;
   }
+}
+
 
   // 実績送信
   async function sendReport() {
